@@ -17,25 +17,25 @@ Key components include:
 ```
 Identifying-Subgroup-Specific-Genetic-Modules
 ├── data/
-│   ├── graphs/                # Raw generated graphs
-│   └── modified_graphs/       # Graphs with initialized edge features
+│   ├── graphs/                    # Raw generated graphs
+│   └── modified_graphs/           # Graphs with initialized edge features
 ├── data_pipeline/
-│   ├── generate_graphs.py     # Graph simulation
-│   └── init_edge_features.py  # Edge feature initialization
+│   ├── generate_graphs.py         # Graph simulation
+│   └── init_edge_features.py      # Edge feature initialization
 ├── models/
-│   ├── architecture.py        # GNNClassifier definition and weight initialization
-│   ├── training.py            # Training routines (train_on_dataloader & evaluate_on_dataloader)
-│   └── hyperparameter_tuning.py  # Hyperparameter tuning via Optuna
+│   ├── architecture.py            # GNNClassifier definition and weight initialization
+│   ├── training.py                # Training routines (train_on_dataloader & evaluate_on_dataloader)
+│   └── hyperparameter_tuning.py   # Hyperparameter tuning via Optuna
 ├── utils/
-│   └── logging.py             # W&B logging integration
+│   └── logging.py                 # W&B logging integration
 ├── experiments/
-│   ├── config.yaml            # Experiment configuration template
-│   └── optuna_studies/        # Results from hyperparameter search
+│   ├── config.yaml                # Experiment configuration template
+│   └── optuna_studies/            # Results from hyperparameter search
 ├── scripts/
-│   ├── inference.py           # Inference script: convert NetworkX graph to annotated graph
-│   ├── train_model.py         # Entry point for model training
-│   └── tune_hyperparams.py    # Entry point for hyperparameter tuning
-└── requirements.txt           # Python dependencies
+│   ├── inference.py               # Inference script: convert NetworkX graph to annotated graph
+│   ├── train_model.py             # Entry point for model training
+│   └── tune_hyperparams.py        # Entry point for hyperparameter tuning
+└── requirements.txt               # Python dependencies
 ```
 
 ---
@@ -44,7 +44,7 @@ Identifying-Subgroup-Specific-Genetic-Modules
 
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/yourusername/Identifying-Subgroup-Specific-Genetic-Modules.git
+   git clone https://github.com/John-Isr/Identifying-Subgroup-Specific-Genetic-Modules-Using-GNN.git
    cd Identifying-Subgroup-Specific-Genetic-Modules
    ```
 
