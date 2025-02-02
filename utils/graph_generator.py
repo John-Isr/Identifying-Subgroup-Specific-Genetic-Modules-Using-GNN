@@ -4,6 +4,7 @@ import logging
 import argparse
 from utils.simulation import run_simulation
 from torch_geometric.utils import from_networkx
+# logging.basicConfig(level=logging.INFO)
 
 # Function definitions
 def generate_graph(nodes=500, p_cluster_NOT_part_of_process=0.2,
@@ -72,9 +73,11 @@ conditions = {
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate and save graphs.")
     parser.add_argument('--conditions', type=str, nargs='+', choices=['all', 'Optimal', 'Suboptimal', 'Default', 'Hard'], required=True, help="Conditions to simulate. Choices: all, Optimal, Suboptimal, Default, Hard")
-    parser.add_argument('--output_dir', type=str, default=os.path.join("..", "data", "graphs"), help="Directory to save the generated graphs")
+    parser.add_argument('--output_dir', type=str, default=os.path.join("data", "graphs"), help="Directory to save the generated graphs")
     parser.add_argument('--num_graphs', type=int, default=1000, help="Number of graphs to generate per condition")
     args = parser.parse_args()
+
+    os.makedirs(args.output_dir, exist_ok=True)
 
     selected_conditions = conditions.keys() if 'all' in args.conditions else args.conditions
 
