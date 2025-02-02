@@ -1,9 +1,8 @@
 import os
 import unittest
-import torch
 import shutil
 from unittest.mock import patch, MagicMock
-from utils.graph_generator import generate_and_save_graphs, conditions
+from data_pipeline import generate_and_save_graphs, conditions
 
 class TestGraphGenerator(unittest.TestCase):
     def setUp(self):

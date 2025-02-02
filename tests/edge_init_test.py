@@ -2,7 +2,7 @@ import unittest
 import torch
 import os
 import shutil
-from utils.init_edge_features import reorder_patients_on_graph, save_graph_group
+from data_pipeline import reorder_patients_on_graph, save_graph_group
 
 
 class TestInitEdgeFeatures(unittest.TestCase):

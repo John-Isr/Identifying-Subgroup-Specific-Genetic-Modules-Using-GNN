@@ -2,7 +2,7 @@ import os
 import torch
 import logging
 import argparse
-from utils.simulation import run_simulation
+from data_pipeline.simulation import run_simulation
 from torch_geometric.utils import from_networkx
 # logging.basicConfig(level=logging.INFO)
 
@@ -21,7 +21,7 @@ def generate_graph(nodes=500, p_cluster_NOT_part_of_process=0.2,
         data = from_networkx(G, group_edge_attrs='all')
         data.y = torch.tensor(
             [1 if node in comms_inverted[latent_process_cluster] else 0 for node in G.nodes()],
-            device="cuda"
+            device = "cuda" if torch.cuda.is_available() else "cpu"
         )
         return data
     except Exception as e:

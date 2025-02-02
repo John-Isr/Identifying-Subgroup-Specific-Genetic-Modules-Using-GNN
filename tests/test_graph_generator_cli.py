@@ -3,7 +3,7 @@ import unittest
 import shutil
 import argparse
 from unittest.mock import patch, MagicMock
-from utils.graph_generator import generate_and_save_graphs, conditions
+from data_pipeline import generate_and_save_graphs, conditions
 
 class TestGraphGeneratorCLI(unittest.TestCase):
     def setUp(self):

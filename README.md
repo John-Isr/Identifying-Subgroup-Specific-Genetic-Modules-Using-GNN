@@ -1,84 +1,138 @@
 # Identifying Subgroup-Specific Genetic Modules in Gene-Gene Correlation Networks Using Graph Neural Networks
 
 ## 📌 Project Overview
-This project aims to **identify subgroup-specific clusters** in gene-gene correlation networks using **supervised learning**. Each graph in our dataset contains exactly **one subgroup-specific cluster**, and our objective is to classify nodes as **belonging to this cluster (1) or not (0)**.
+This project leverages Graph Neural Networks (GNNs) to **identify subgroup-specific clusters** within gene-gene correlation networks using a supervised learning approach. Each graph in the dataset contains exactly **one subgroup-specific cluster**, and our objective is to classify nodes as either **belonging (1)** or **not belonging (0)** to this cluster.
 
-To achieve this, we employ **Graph Neural Networks (GNNs)** enhanced with **attention mechanisms** and **positional encodings**.
+Key components include:
 
-We preprocess the graph by **reordering patients based on a custom similarity score**, ensuring **invariance to permutation** in edge features. Additionally, edge attributes are incorporated into the learning process by weighting node embeddings using correlation values between gene expressions.
+- **Graph Simulation & Preprocessing:** Generate raw graphs and initialize edge features.
+- **GNN Architecture:** A custom classifier built with GNN layers (e.g., GATv2Conv) that incorporates edge attributes, attention mechanisms, and normalization (GraphNorm) to effectively learn node representations.
+- **Training & Hyperparameter Tuning:** Training routines and hyperparameter optimization using Optuna with W&B logging.
+- **Inference Pipeline:** A clean interface to convert NetworkX graphs to annotated graphs with node predictions.
+- **Experiment Tracking:** Real-time logging and visualization with Weights & Biases (wandb).
 
-The initial node embeddings are optimized using **Optuna**, selecting between:
-- **Spectral Positional Encoding (SPE)**, which leverages graph eigenvectors.
-- **Custom Initial Node Embeddings**, embedding patient similarity into the representation.
-
-Our model architecture utilizes **GATv2Conv layers** for message passing, integrating edge attributes into the learning process, with **GraphNorm layers** for normalization between them. After message passing, we use an **MLP head** for node classification.
-
-For optimization, we use **Optuna** with a **TPE Sampler** for efficient hyperparameter selection and a **Hyperband Pruner** based on the **F1 score** to halt underperforming trials. The model is trained using **BCEWithLogitsLoss**, ensuring a differentiable loss function for binary classification.
-
-To streamline experimentation, we leverage **Weights & Biases (wandb)** for real-time tracking, visualization, and hyperparameter analysis.
+---
 
 ## 📁 Repository Structure
 ```
-📦 Identifying-Subgroup-Specific-Genetic-Modules
-├── 📂 data/                 # Raw, processed, and simulated datasets
-├── 📂 models/               # Model definitions and training scripts
-├── 📂 experiments/          # Logs, checkpoints, and configurations
-├── 📂 notebooks/            # Jupyter notebooks for exploration
-├── 📂 utils/                # Helper functions (graph processing, metrics, visualization)
-├── 📂 docs/                 # Project documentation and references
-├── 📂 tests/                # Unit tests for model and data validation
-├── 📜 requirements.txt       # Dependencies
-├── 📜 README.md              # Project overview and instructions
-├── 📜 .gitignore             # Files to ignore in version control
-└── 📜 LICENSE                # Open-source license (if applicable)
+Identifying-Subgroup-Specific-Genetic-Modules
+├── data/
+│   ├── graphs/                # Raw generated graphs
+│   └── modified_graphs/       # Graphs with initialized edge features
+├── data_pipeline/
+│   ├── generate_graphs.py     # Graph simulation
+│   └── init_edge_features.py  # Edge feature initialization
+├── models/
+│   ├── architecture.py        # GNNClassifier definition and weight initialization
+│   ├── training.py            # Training routines (train_on_dataloader & evaluate_on_dataloader)
+│   └── hyperparameter_tuning.py  # Hyperparameter tuning via Optuna
+├── utils/
+│   └── logging.py             # W&B logging integration
+├── experiments/
+│   ├── config.yaml            # Experiment configuration template
+│   └── optuna_studies/        # Results from hyperparameter search
+├── scripts/
+│   ├── inference.py           # Inference script: convert NetworkX graph to annotated graph
+│   ├── train_model.py         # Entry point for model training
+│   └── tune_hyperparams.py    # Entry point for hyperparameter tuning
+└── requirements.txt           # Python dependencies
 ```
 
+---
+
 ## 🔧 Setup Instructions
-1. **Clone the repository**:
+
+1. **Clone the Repository:**
    ```bash
    git clone https://github.com/yourusername/Identifying-Subgroup-Specific-Genetic-Modules.git
    cd Identifying-Subgroup-Specific-Genetic-Modules
    ```
-2. **Create a virtual environment** (recommended):
+
+2. **Create and Activate a Virtual Environment:**
    ```bash
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
-3. **Install dependencies**:
+
+3. **Install Dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
-4. **Set up Weights & Biases (wandb) for experiment tracking**:
+
+4. **Set Up Weights & Biases (wandb):**
    ```bash
    wandb login
    ```
-   You will need an API key, which you can obtain by creating a free account at [wandb.ai](https://wandb.ai/).
+   *(Obtain your API key by creating a free account at [wandb.ai](https://wandb.ai/).)*
+
+---
 
 ## 🚀 Running the Project
-- **Preprocessing Data**:
-  ```bash
-  python data/data_preprocessing.py
-  ```
-- **Training the Model with Optuna and wandb logging**:
-  ```bash
-  python models/train.py --config experiments/config.yaml --use_wandb
-  ```
-- **Evaluating the Model**:
-  ```bash
-  python models/evaluate.py --checkpoint experiments/checkpoints/model.pth
-  ```
+
+### 1. Generate and Preprocess Data
+Generate raw graphs and initialize their edge features:
+```bash
+python data_pipeline/generate_graphs.py
+python data_pipeline/init_edge_features.py
+```
+
+### 2. Train the Model
+Train your GNN model using the training script and configuration file:
+```bash
+python scripts/train_model.py --config experiments/config.yaml --use_wandb
+```
+
+### 3. Hyperparameter Tuning
+Optimize the model’s hyperparameters with Optuna:
+```bash
+python scripts/tune_hyperparams.py --config experiments/config.yaml
+```
+
+### 4. Run Inference
+Use the inference script to process a NetworkX graph and obtain node predictions:
+```python
+import networkx as nx
+from scripts.inference import run_inference
+
+# Create or load your NetworkX graph
+nx_graph = nx.erdos_renyi_graph(100, 0.15)
+
+# Ensure each node has the features expected by your model
+for node in nx_graph.nodes():
+    nx_graph.nodes[node]['feature'] = [0.5]  # Example feature
+
+# Run inference to add the 'classification' attribute to nodes
+result_graph = run_inference(
+    nx_graph=nx_graph,
+    model_path="experiments/best_model.pth",
+    device='auto'
+)
+
+# Retrieve predictions
+predictions = nx.get_node_attributes(result_graph, 'classification')
+print(predictions)
+```
+
+---
 
 ## 📊 Results & Visualization
-We use **Weights & Biases (wandb)** for logging experiments and visualizing results. Additionally, we provide **visualization tools** in `utils/visualization.py` to inspect gene clusters and correlations in the learned representations.
+Real-time experiment tracking and visualization are handled via **Weights & Biases (wandb)**.
+
+---
 
 ## 📄 References
+- **Brody et al. (2021)**, *How Attentive are Graph Attention Networks?*
 - **Shiran Gerassy-Vainberg & Shai S. Shen-Orr (2024)**, *A Personalized Network Framework Reveals Predictive Axis of Anti-TNF Response Across Diseases.*
 - **Tsitsulin et al. (2023)**, *Graph Clustering with Graph Neural Networks.*
 
+---
+
 ## 🤝 Contributors
-- **Yaniv Slot-Futterman** (yaniv.slor@campus.technion.ac.il)
+- **Yaniv Slor Futterman** (yaniv.slor@campus.technion.ac.il)
 - **Jonathan Israel** (jonathani@campus.technion.ac.il)
 
+---
+
 ## 📜 License
-This project is licensed under the MIT License - see the `LICENSE` file for details.
+This project is licensed under the Apache 2.0 License – see the [`LICENSE`](LICENSE) file for details.
 

@@ -3,7 +3,8 @@ import torch
 import os
 import shutil
 import argparse
-from utils.init_edge_features import reorder_patients_on_graph, save_graph_group, main
+from data_pipeline import reorder_patients_on_graph, save_graph_group
+
 
 class TestInitEdgeFeatures(unittest.TestCase):
 
