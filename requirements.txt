@@ -1,0 +1,13 @@
+torch
+torch-geometric
+optuna
+wandb
+numpy
+pandas
+scikit-learn
+matplotlib
+networkx
+seaborn
+tqdm
+jupyter
+scipy
