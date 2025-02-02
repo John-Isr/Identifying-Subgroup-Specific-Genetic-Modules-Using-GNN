@@ -6,13 +6,16 @@ import argparse
 # logging.basicConfig(level=logging.INFO)
 
 def reorder_patients_on_graph(graph):
+    # Separate edge_att into patient data and last column
     edge_attr = graph.edge_attr.float()
     patient_data = edge_attr[:, :-1]
     last_column = edge_attr[:, -1:]
+    # Calculate patient grades and ranks, then reorder patient data
     patient_grades = (patient_data.T @ patient_data).sum(dim=1).tolist()
     sorted_grades = sorted(patient_grades, reverse=True)
     ranks = [sorted_grades.index(grade) for grade in patient_grades]
     reordered_patient_data = patient_data[:, ranks]
+    # ReConcat the patient data with the original last column (overall correlation value)
     graph.edge_attr = torch.cat([reordered_patient_data, last_column], dim=1)
 
 def save_graph_group(group, name, output_dir):
@@ -36,10 +39,13 @@ def main():
     }
 
     for name, path in graph_files.items():
-        graphs = torch.load(path, weights_only=False)
-        for graph in graphs:
-            reorder_patients_on_graph(graph)
-        save_graph_group(graphs, name, args.output_dir)
+        if os.path.exists(path):  # Check if the file exists
+            graphs = torch.load(path, weights_only=False)
+            for graph in graphs:
+                reorder_patients_on_graph(graph)
+            save_graph_group(graphs, name, args.output_dir)
+        else:
+            logging.warning(f"File {path} does not exist. Skipping {name}.")  # Log warning if file does not exist
 
 if __name__ == "__main__":
     main()
