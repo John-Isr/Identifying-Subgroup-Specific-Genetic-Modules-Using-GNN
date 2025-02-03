@@ -27,7 +27,7 @@ def run_inference(nx_graph, model_path, device='auto'):
 
     # Add dummy edge features if needed (model expects them)
     if not hasattr(pyg_data, 'edge_attr'):
-        pyg_data.edge_attr = torch.ones(pyg_data.edge_index.shape[1], 1)
+            raise ValueError("Input graph does not have edge features.")
 
     # Load model
     model = torch.load(model_path, map_location=device)
@@ -39,6 +39,8 @@ def run_inference(nx_graph, model_path, device='auto'):
                        pyg_data.edge_index.to(device),
                        pyg_data.edge_attr.float().to(device))
         probs = torch.sigmoid(logits).cpu().numpy()
+
+    #TODO: Consider returning the actual classification instead of the probability
 
     # Add predictions to NetworkX graph
     nx.set_node_attributes(nx_graph,

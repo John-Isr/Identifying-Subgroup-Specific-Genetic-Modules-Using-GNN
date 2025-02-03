@@ -79,13 +79,13 @@ python data_pipeline/init_edge_features.py
 ### 2. Train the Model
 Train your GNN model using the training script and configuration file:
 ```bash
-python scripts/train_model.py --config experiments/config.yaml --use_wandb
+python scripts/train_model.py --config experiments/default_config.yaml --use_wandb
 ```
 
 ### 3. Hyperparameter Tuning
 Optimize the model’s hyperparameters with Optuna:
 ```bash
-python scripts/tune_hyperparams.py --config experiments/config.yaml
+python scripts/tune_hyperparams.py --config experiments/default_config.yaml
 ```
 
 ### 4. Run Inference

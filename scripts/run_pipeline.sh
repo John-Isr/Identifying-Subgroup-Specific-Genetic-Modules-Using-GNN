@@ -1,9 +1,9 @@
 # scripts/run_pipeline.sh
-python data_pipeline/generate_graphs.py \
+python -m data_pipeline.graph_generator \
   --conditions Optimal Suboptimal \
-  --num_graphs 1000 \
+  --num_graphs 100 \
   --output_dir data/graphs
 
-python data_pipeline/init_edge_features.py \
+python -m data_pipeline.init_edge_features \
   --input_dir data/graphs \
   --output_dir data/modified_graphs
