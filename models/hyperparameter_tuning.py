@@ -75,16 +75,15 @@ def objective(trial):
     ## Initialize wandb using this run configuration
     config = compile_hyperparams_from_trial(trial)
     init_wandb(config)
-
     ## Initialize all the training and model components
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    if device == "cuda":
-        torch.cuda.synchronize()
-        torch.cuda.empty_cache()
+    if device == 'cuda':
+        torch.cuda.synchronize()  # Wait for all CUDA operations to finish
+        torch.cuda.empty_cache()  # Free unused memory
+        gc.collect()  # Collect garbage from previous trials
 
     # Get DataLoaders
     train_loader, val_loader,test_loader = load_data_splits(batch_size, node_embedding_type)
-
     # Loss Function
     pos_weight = torch.tensor([pos_weight_ratio], dtype=torch.float32).to(device)
     loss_function = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
@@ -111,7 +110,6 @@ def objective(trial):
         dropout=dropout,
     )
     model.to(device)
-
     # Initialize optimizer
     optimizer_class = getattr(torch.optim, optimizer_name)
     optimizer = optimizer_class(

@@ -11,6 +11,7 @@ def ensure_wandb_init(func):
         return func(*args, **kwargs)
     return wrapper
 
+@ensure_wandb_init
 def finish_logging():
     """
     Finish logging the current run.
@@ -270,7 +271,6 @@ def compile_hyperparams_from_trial(trial):
 
 
 
-@ensure_wandb_init
 def log_pruned(epoch, f1_score, trial):
     """
     Logs information about a pruned Optuna trial.
@@ -287,7 +287,6 @@ def log_pruned(epoch, f1_score, trial):
     )
 
 
-@ensure_wandb_init
 def log_nan_loss(epoch, trial=None):
     """
     Logs information about a trial that was pruned due to NaN loss.
@@ -302,7 +301,6 @@ def log_nan_loss(epoch, trial=None):
         wandb.log({"epoch":epoch, "is_nan": True})
     wandb.finish(exit_code=-1)  # to mark the run as failed in wandb
 
-@ensure_wandb_init
 def log_test_metrics(f1_score, precision, recall, trial):
     """
     Logs test metrics after evaluating the model on the test set.
@@ -320,7 +318,6 @@ def log_test_metrics(f1_score, precision, recall, trial):
         "test/f1": f1_score,
     })
 
-@ensure_wandb_init
 def log_evaluation_metrics(overall_precision, overall_recall, overall_accuracy, f1_score, epoch):
     """
     Logs evaluation metrics for validation.
@@ -340,7 +337,6 @@ def log_evaluation_metrics(overall_precision, overall_recall, overall_accuracy, 
         "epoch": epoch
     }, commit=False)  # Combine with epoch metrics
 
-@ensure_wandb_init
 def log_epoch_metrics(optimizer, total_loss, model, epoch):
     """
     Logs epoch-level metrics during training.
@@ -351,37 +347,37 @@ def log_epoch_metrics(optimizer, total_loss, model, epoch):
         model (torch.nn.Module): Model used in training.
         epoch: Current epoch number.
     """
-    weight_stats = {"zero": 0, "nan": 0, "inf": 0}
-    grad_stats = {"zero": 0, "nan": 0, "inf": 0}
-    weight_norm = 0
+    # weight_stats = {"zero": 0, "nan": 0, "inf": 0}
+    # grad_stats = {"zero": 0, "nan": 0, "inf": 0}
+    # weight_norm = 0
 
-    with torch.no_grad():
-        for name, param in model.named_parameters():
-            if param.requires_grad:
-                # Weight statistics
-                weight_norm += param.norm().item()
-
-                weight_stats["zero"] += (param == 0).sum().item()
-                weight_stats["nan"] += torch.isnan(param).sum().item()
-                weight_stats["inf"] += torch.isinf(param).sum().item()
-
-                # Gradient statistics
-                if param.grad is not None:
-                    grad = param.grad.data
-                    grad_stats["zero"] += (grad == 0).sum().item()
-                    grad_stats["nan"] += torch.isnan(grad).sum().item()
-                    grad_stats["inf"] += torch.isinf(grad).sum().item()
+    # with torch.no_grad():
+    #     for name, param in model.named_parameters():
+    #         if param.requires_grad:
+    #             # Weight statistics
+    #             weight_norm += param.norm().item()
+    #
+    #             weight_stats["zero"] += (param == 0).sum().item()
+    #             weight_stats["nan"] += torch.isnan(param).sum().item()
+    #             weight_stats["inf"] += torch.isinf(param).sum().item()
+    #
+    #             # Gradient statistics
+    #             if param.grad is not None:
+    #                 grad = param.grad.data
+    #                 grad_stats["zero"] += (grad == 0).sum().item()
+    #                 grad_stats["nan"] += torch.isnan(grad).sum().item()
+    #                 grad_stats["inf"] += torch.isinf(grad).sum().item()
 
     # Log all metrics in one call
     wandb.log({
         "train/loss": total_loss,
         "train/learning_rate": optimizer.param_groups[0]['lr'],
-        "weights/norm": weight_norm,
-        "weights/zero": weight_stats["zero"],
-        "weights/nan": weight_stats["nan"],
-        "weights/inf": weight_stats["inf"],
-        "gradients/zero": grad_stats["zero"],
-        "gradients/nan": grad_stats["nan"],
-        "gradients/inf": grad_stats["inf"],
+        # "weights/norm": weight_norm,
+        # "weights/zero": weight_stats["zero"],
+        # "weights/nan": weight_stats["nan"],
+        # "weights/inf": weight_stats["inf"],
+        # "gradients/zero": grad_stats["zero"],
+        # "gradients/nan": grad_stats["nan"],
+        # "gradients/inf": grad_stats["inf"],
         "epoch": epoch
     })

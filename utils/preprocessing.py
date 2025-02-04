@@ -6,13 +6,12 @@ from torch_geometric.loader import DataLoader
 from torch.utils.data import random_split
 
 
-
-def load_data_splits(batch_size, node_embedding_type='weighted', seed=42, graph_dir = "./data/modified_graphs"):
+def load_data_splits(batch_size, device = "cuda" if torch.cuda.is_available() else "cpu", node_embedding_type='weighted', seed=42, graph_dir = "./data/modified_graphs"):
     """
     Loads graphs from the modified graphs directory, applies the specified node embedding,
     splits the dataset into train/validation/test, and returns corresponding DataLoaders.
 
-    Parameters:
+    Parameters:`
         batch_size (int): Batch size for the DataLoader.
         node_embedding_type (str): Type of node embedding to apply. Options:
                                    'weighted', 'unweighted', 'spectral_positional_encoding'.
@@ -58,9 +57,14 @@ def load_data_splits(batch_size, node_embedding_type='weighted', seed=42, graph_
     )
 
     # Create DataLoaders for each dataset split
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    if device == 'cuda':
+        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, pin_memory=True)
+        val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, pin_memory=True)
+        test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, pin_memory=True)
+    else:
+        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+        val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+        test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
     return train_loader, val_loader, test_loader
 

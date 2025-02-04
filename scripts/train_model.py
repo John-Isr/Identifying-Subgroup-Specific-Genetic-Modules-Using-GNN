@@ -67,7 +67,7 @@ def main():
     ## Load Data
 
     train_loader, val_loader, test_loader = load_data_splits(
-        batch_size=hparams["batch_size"],
+        batch_size=hparams["batch_size"],device=device,
         node_embedding_type=hparams["node_embedding_type"],
         graph_dir=data_dir
     )
