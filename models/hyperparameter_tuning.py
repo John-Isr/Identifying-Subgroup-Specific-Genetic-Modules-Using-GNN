@@ -77,10 +77,12 @@ def objective(trial):
     init_wandb(config)
     ## Initialize all the training and model components
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    if device == 'cuda':
-        torch.cuda.synchronize()  # Wait for all CUDA operations to finish
-        torch.cuda.empty_cache()  # Free unused memory
-        gc.collect()  # Collect garbage from previous trials
+    #TODO: Evaluate if these synch points help with training hangs
+
+    # if device == 'cuda':
+    #     torch.cuda.synchronize()  # Wait for all CUDA operations to finish
+    #     torch.cuda.empty_cache()  # Free unused memory
+    #     gc.collect()  # Collect garbage from previous trials
 
     # Get DataLoaders
     train_loader, val_loader,test_loader = load_data_splits(batch_size, node_embedding_type)

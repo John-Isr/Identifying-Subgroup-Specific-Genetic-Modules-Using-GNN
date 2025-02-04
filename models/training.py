@@ -36,10 +36,11 @@ def train_model(model, optimizer, scheduler, loss_function, train_loader, val_lo
 
             # Compute loss
             loss = loss_function(out.squeeze(), batch.y.float())
-            # if torch.isnan(loss).any() or torch.isinf(loss).any():
-            #     #NaN detected in loss!
-            #     total_loss=math.nan
-            #     break
+            # TODO: evaluate if these checks help with training hangs
+            if torch.isnan(loss).any() or torch.isinf(loss).any():
+                #NaN detected in loss!
+                total_loss=math.nan
+                break
 
             # Backpropagation
             loss.backward()
