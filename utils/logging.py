@@ -24,7 +24,7 @@ def init_wandb(config):
     :param config: a dictionary containing the configuration for the run.
     """
     os.environ["WANDB_DISABLE_SYSTEM"] = "true"
-    wandb.init(project="GNN-Modules", config=config,settings=wandb.Settings(x_disable_stats=True, console="off", disable_git=True))
+    wandb.init(save_code=False, project="GNN-Modules", config=config,settings=wandb.Settings(x_disable_stats=True, console="off", disable_git=True))
 
 
 def convert_optuna_params_to_config(best_params: dict) -> dict:
