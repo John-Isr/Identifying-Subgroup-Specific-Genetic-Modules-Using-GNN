@@ -14,28 +14,53 @@ Key components include:
 ---
 
 ## 📁 Repository Structure
+
+
 ```
-Identifying-Subgroup-Specific-Genetic-Modules
+Identifying-Subgroup-Specific-Genetic-Modules-Using-GNN
 ├── data/
 │   ├── graphs/                    # Raw generated graphs
 │   └── modified_graphs/           # Graphs with initialized edge features
 ├── data_pipeline/
-│   ├── generate_graphs.py         # Graph simulation
-│   └── init_edge_features.py      # Edge feature initialization
-├── models/
-│   ├── architecture.py            # GNNClassifier definition and weight initialization
-│   ├── training.py                # Training routines (train_on_dataloader & evaluate_on_dataloader)
-│   └── hyperparameter_tuning.py   # Hyperparameter tuning via Optuna
-├── utils/
-│   └── logging.py                 # W&B logging integration
+│   ├── __init__.py                # Module initializer for the data pipeline
+│   ├── graph_generator.py         # Graph simulation and generation
+│   ├── init_edge_features.py      # Edge feature initialization
+│   └── simulation.py              # Graph simulation framework
 ├── experiments/
-│   ├── config.yaml                # Experiment configuration template
-│   └── optuna_studies/            # Results from hyperparameter search
+│   ├── optuna_studies/
+│   │   ├── example_study.db       # Example database for Optuna studies
+│   │   └── study.db               # Optuna study results
+│   ├── current_trial_best.yaml    # Best trial configuration from the currently running study
+│   ├── default_config.yaml        # Default hyper parameter configuration
+│   └── trial_best.yaml            # Best trial configuration after hyperparameter tuning
+├── models/
+│   ├── __init__.py                # Module initializer for models
+│   ├── architecture.py            # GNN architecture and weight initialization
+│   ├── hyperparameter_tuning.py   # Hyperparameter tuning routines
+│   └── training.py                # Training routines for the model
+├── notebooks/
+│   └── Project.ipynb              # Jupyter Notebook for project exploration
 ├── scripts/
-│   ├── inference.py               # Inference script: convert NetworkX graph to annotated graph
-│   ├── train_model.py             # Entry point for model training
-│   └── tune_hyperparams.py        # Entry point for hyperparameter tuning
+│   ├── __init__.py                # Module initializer for scripts
+│   ├── inference.py               # Script for inference on graphs
+│   ├── run_pipeline.sh            # Shell script to run the entire pipeline
+│   ├── train_model.py             # Script to train the model using default or custom configuration
+│   └── tune_hyperparams.py        # Script to tune model hyperparameters
+├── tests/
+│   ├── edge_init_test.py          # Test for edge initialization
+│   ├── edge_init_test_load_parse.py  # Test for loading and parsing edge initialization
+│   ├── graph_generator_test.py    # Tests for graph generator
+│   ├── graph_generator_test2.py   # Additional tests for graph generator
+│   └── test_graph_generator_cli.py # CLI tests for graph generator
+├── utils/
+│   ├── __init__.py                # Module initializer for utilities
+│   ├── logging.py                 # Logging utilities for W&B integration
+│   └── preprocessing.py           # Preprocessing utilities
+├── .gitignore                     # Git ignore file
+├── LICENSE                        # License information
+├── README.md                      # Project documentation
 └── requirements.txt               # Python dependencies
+
 ```
 
 ---
@@ -66,7 +91,7 @@ Identifying-Subgroup-Specific-Genetic-Modules
    *(Obtain your API key by creating a free account at [wandb.ai](https://wandb.ai/).)*
 
 ---
-
+#TODO: running the project needs updating
 ## 🚀 Running the Project
 
 ### 1. Generate and Preprocess Data
