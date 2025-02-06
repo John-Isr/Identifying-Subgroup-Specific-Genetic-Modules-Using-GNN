@@ -1,29 +1,27 @@
-import traceback
-
 import torch
 import gc
 from torch import nn
 import optuna
-from torch_geometric.utils import unbatch
 
 from utils import load_data_splits, init_wandb, compile_hyperparams_from_trial
 from models.architecture import GNNClassifier
 from models.training import train_model, evaluate_model
 from utils.logging import log_test_metrics, finish_logging
 
+
 def objective(trial):
 
     ## Getting optuna parameters
     # Training
-    batch_size = trial.suggest_categorical("batch_size", [16, 32, 64])
+    batch_size = trial.suggest_int("batch_size", 1, 32)
 
     # Loss Function
-    pos_weight_ratio = trial.suggest_categorical("pos_weight_ratio", [10, 15, 20])
+    pos_weight_ratio = trial.suggest_int("pos_weight_ratio", 10, 20)
 
     # Model Architecture
-    num_layers = trial.suggest_categorical("num_layers", [1, 2, 3])
+    num_layers = trial.suggest_int("num_layers", 1, 3)
     hidden_dim = trial.suggest_categorical("hidden_dim", [64, 128, 256])
-    heads = trial.suggest_categorical("heads", [1, 4, 8])
+    heads = 2 ** trial.suggest_int("heads", 0, 3) # This will suggest powers of 2, logged to wandb appropriately though
     dropout = trial.suggest_float("dropout", 0.0, 0.5)
     node_embedding_type = trial.suggest_categorical(
         "node_embedding", ["weighted", "spectral_positional_encoding", "unweighted"]
@@ -31,7 +29,7 @@ def objective(trial):
 
     # Optimizer Configuration
     optimizer_name = trial.suggest_categorical("optimizer", ["Adam", "AdamW", "Adamax", "RMSprop"])
-    lr = trial.suggest_float("lr", 1e-4, 1e-3, log=True)
+    lr = trial.suggest_float("lr", 1e-4, 1e-2, log=True)
     weight_decay = trial.suggest_float("weight_decay", 1e-4, 1e-2, log=True)
 
     optimizer_params = {}
@@ -71,6 +69,8 @@ def objective(trial):
             scheduler_params["max_lr"] = trial.suggest_float("cyclic_max_lr", 1e-3, 1e-2, log=True)
             scheduler_params["step_size_up"] = trial.suggest_int("cyclic_step_size_up", 50, 200)
             scheduler_params["mode"] = trial.suggest_categorical("cyclic_mode", ["triangular", "triangular2"])
+            # Dynamically set cycle_momentum
+            scheduler_params["cycle_momentum"] = optimizer_name == "RMSprop"
 
     ## Initialize wandb using this run configuration
     config = compile_hyperparams_from_trial(trial)
@@ -82,7 +82,7 @@ def objective(trial):
     # if device == 'cuda':
     #     torch.cuda.synchronize()  # Wait for all CUDA operations to finish
     #     torch.cuda.empty_cache()  # Free unused memory
-    #     gc.collect()  # Collect garbage from previous trials
+    gc.collect()  # Collect garbage from previous trials
 
     # Get DataLoaders
     train_loader, val_loader,test_loader = load_data_splits(batch_size, node_embedding_type)
@@ -139,32 +139,26 @@ def objective(trial):
             loss_function=loss_function,
             train_loader=train_loader,
             val_loader=val_loader,
-            num_epochs=200,  # Fixed
+            num_epochs=250,  # Fixed
             trial=trial
         )
     except optuna.exceptions.TrialPruned as e:
         # Evaluate on test set before gracefully exiting
-        val_metrics = evaluate_model(model, test_loader)
-        log_test_metrics(val_metrics['f1_score'], val_metrics['precision'], val_metrics['recall'], trial)
+        test_metrics = evaluate_model(model, test_loader)
+        log_test_metrics(test_metrics['f1_score'], test_metrics['precision'], test_metrics['recall'], trial)
         finish_logging()
-        del model
-        if device == 'cuda':
-            torch.cuda.empty_cache()
-        gc.collect()
+        clean_up_trial(model, device)
         raise e
     except ValueError as e:
         # We can't assess on the test set if the model reached Nan/Inf loss
-        del model
-        if device == 'cuda':
-            torch.cuda.empty_cache()
-        gc.collect()
+        clean_up_trial(model, device)
         raise e
     except RuntimeError as e:
         error_message = str(e).lower()  # Normalize to lowercase for case-insensitive matching
         if "out of memory" in error_message or "cuda" in error_message:
+            gc.collect()
             if device == 'cuda':
                 torch.cuda.empty_cache()
-            gc.collect()
             raise optuna.exceptions.TrialPruned()  # Tell Optuna to discard this trial
 
 
@@ -172,6 +166,12 @@ def objective(trial):
     val_metrics = evaluate_model(model, test_loader)
     log_test_metrics(val_metrics['f1_score'], val_metrics['precision'], val_metrics['recall'], trial)
     finish_logging()
-
+    clean_up_trial(model, device)
     return val_metrics['f1_score']
 
+def clean_up_trial(model, device):
+    # Clean up trial resources
+    del model
+    gc.collect()
+    if device == 'cuda':
+        torch.cuda.empty_cache()
