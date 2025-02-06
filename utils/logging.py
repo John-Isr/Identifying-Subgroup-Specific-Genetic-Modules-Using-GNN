@@ -23,8 +23,14 @@ def init_wandb(config):
     Initialize Weights and Biases with the given configuration.
     :param config: a dictionary containing the configuration for the run.
     """
-    os.environ["WANDB_DISABLE_SYSTEM"] = "true"
-    wandb.init(save_code=False, project="GNN-Modules", config=config,settings=wandb.Settings(x_disable_stats=True, console="off", disable_git=True))
+    os.environ["WANDB_DIR"] = "/tmp"
+    os.environ["WANDB_CACHE_DIR"] = "/tmp"
+
+    # Disable offline caching
+    os.environ["WANDB__DISABLE_CACHE"] = "true"
+    wandb.init(mode='online', project="GNN-Modules", config=config,settings=wandb.Settings(console="off", disable_git=True))
+
+
 
 
 def convert_optuna_params_to_config(best_params: dict) -> dict:
@@ -43,7 +49,7 @@ def convert_optuna_params_to_config(best_params: dict) -> dict:
     # --- Model Architecture ---
     num_layers = best_params["num_layers"]
     hidden_dim = best_params["hidden_dim"]
-    heads = best_params["heads"]
+    heads = 2 ** best_params["heads"]
     dropout = best_params["dropout"]
     node_embedding = best_params["node_embedding"]  # "weighted", "spectral_positional_encoding", or "unweighted"
 
@@ -160,7 +166,7 @@ def compile_hyperparams_from_config(config: dict) -> dict:
     model_params = training_cfg.get("model_params", {})
     num_layers = model_params.get("num_layers", 2)
     hidden_dim = model_params.get("hidden_dim", 128)
-    heads = model_params.get("heads", 4)
+    heads = 2 ** model_params.get("heads", 2)
     dropout = model_params.get("dropout", 0.2)
 
     # Optimizer and scheduler
@@ -234,7 +240,7 @@ def compile_hyperparams_from_trial(trial):
         "pos_weight_ratio": trial.params["pos_weight_ratio"],
         "num_layers": trial.params["num_layers"],
         "hidden_dim": trial.params["hidden_dim"],
-        "heads": trial.params["heads"],
+        "heads": 2 ** trial.params["heads"],
         "dropout": trial.params["dropout"],
         "node_embedding_type": trial.params["node_embedding"],
         "optimizer": trial.params["optimizer"],
@@ -301,7 +307,7 @@ def log_nan_loss(epoch, trial=None):
         wandb.log({"epoch":epoch, "is_nan": True})
     wandb.finish(exit_code=-1)  # to mark the run as failed in wandb
 
-def log_test_metrics(f1_score, precision, recall, trial):
+def log_test_metrics(f1_score, precision, recall, trial=None):
     """
     Logs test metrics after evaluating the model on the test set.
 
@@ -311,12 +317,19 @@ def log_test_metrics(f1_score, precision, recall, trial):
         recall (float): Recall on the test set.
         trial (optuna.trial.Trial): The current Optuna trial.
     """
-    wandb.log({
-        "meta/trial_number": trial.number,
-        "test/precision": precision,
-        "test/recall": recall,
-        "test/f1": f1_score,
-    })
+    if trial:
+        wandb.log({
+            "meta/trial_number": trial.number,
+            "test/precision": precision,
+            "test/recall": recall,
+            "test/f1": f1_score,
+        })
+    else:
+        wandb.log({
+            "test/precision": precision,
+            "test/recall": recall,
+            "test/f1": f1_score,
+        })
 
 def log_evaluation_metrics(overall_precision, overall_recall, overall_accuracy, f1_score, epoch):
     """
