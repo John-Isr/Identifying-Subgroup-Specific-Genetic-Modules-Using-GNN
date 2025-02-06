@@ -1,6 +1,5 @@
 import math
 import torch
-import numpy as np
 from sklearn.metrics import precision_score, recall_score, accuracy_score, f1_score
 from utils import log_epoch_metrics, log_evaluation_metrics, log_pruned, log_nan_loss
 import optuna
@@ -25,22 +24,20 @@ def train_model(model, optimizer, scheduler, loss_function, train_loader, val_lo
     device = next(model.parameters()).device  # Ensure consistency with model device
     for epoch in range(num_epochs):
         model.train()
-        total_loss = 0
+        total_loss = torch.zeros(1, device=device)  # GPU tensor to accumulate loss
 
         for batch_idx, batch in enumerate(train_loader):
-            batch = batch.to(device)
+            if device == 'cuda':
+                batch = batch.to(device, non_blocking=True)
+            else:
+                batch = batch.to(device)
             optimizer.zero_grad()
 
             # Forward pass
-            out = model(batch.x.float(), batch.edge_index, edge_attr=batch.edge_attr.float())
+            out = model(batch.x, batch.edge_index, edge_attr=batch.edge_attr)
 
             # Compute loss
-            loss = loss_function(out.squeeze(), batch.y.float())
-            # TODO: evaluate if these checks help with training hangs
-            if torch.isnan(loss).any() or torch.isinf(loss).any():
-                #NaN detected in loss!
-                total_loss=math.nan
-                break
+            loss = loss_function(out.squeeze(), batch.y)
 
             # Backpropagation
             loss.backward()
@@ -51,10 +48,11 @@ def train_model(model, optimizer, scheduler, loss_function, train_loader, val_lo
             if scheduler and isinstance(scheduler, torch.optim.lr_scheduler.CyclicLR):
                 scheduler.step()
 
-            total_loss += loss.item()
+            total_loss += loss.detach()
+        loss_for_logging = total_loss.item()
 
         # Handle NaN or Inf cases
-        if math.isnan(total_loss) or math.isinf(total_loss):
+        if math.isnan(loss_for_logging) or math.isinf(loss_for_logging):
             log_nan_loss(epoch, trial)
             raise ValueError(f"NaN or Inf loss at epoch {epoch}")
 
@@ -83,7 +81,6 @@ def train_model(model, optimizer, scheduler, loss_function, train_loader, val_lo
             if trial.should_prune():
                 log_pruned(epoch, f1, trial)
                 raise optuna.TrialPruned()
-
     return model
 
 
@@ -100,20 +97,31 @@ def evaluate_model(model, data_loader):
     """
     device = next(model.parameters()).device  # Ensure consistency with model device
     model.eval()
-    y_true = []
-    y_pred = []
+
+    all_outs = []
+    all_targets = []
 
     with torch.no_grad():
         for batch in data_loader:
             batch = batch.to(device)
-            out = model(batch.x.float(), batch.edge_index, edge_attr=batch.edge_attr.float())
+            out = model(batch.x, batch.edge_index, edge_attr=batch.edge_attr)
 
-            y_true.append(batch.y.detach().cpu().numpy())
-            y_pred.append((torch.sigmoid(out).detach().cpu().numpy() > 0.5))
+            # Accumulate on GPU
+            all_outs.append(torch.sigmoid(out))
+            all_targets.append(batch.y)
 
-    # Concatenate after all batches are processed
-    y_true = np.concatenate(y_true)
-    y_pred = np.concatenate(y_pred)
+    # Concatenate once at the end
+    all_outs = torch.cat(all_outs, dim=0)  # shape [total_examples, ...]
+    all_targets = torch.cat(all_targets, dim=0)
+
+    # Now we do a single move to CPU
+    all_outs_cpu = all_outs.cpu().numpy()
+    all_targets_cpu = all_targets.cpu().numpy()
+
+    # Threshold predictions at 0.5
+    y_pred = (all_outs_cpu > 0.5)
+    y_true = all_targets_cpu
+
 
     # Compute evaluation metrics
     precision = precision_score(y_true, y_pred, zero_division=0)

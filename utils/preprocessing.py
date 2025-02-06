@@ -41,7 +41,7 @@ def load_data_splits(batch_size, device = "cuda" if torch.cuda.is_available() el
     # Apply the node embedding function to each graph
     for graph in graphs:
         graph.x = embedding_func(graph)
-
+        graph.y = graph.y.float()
 
     # Split the dataset into train, validation, and test sets
     dataset_size = len(graphs)
@@ -58,9 +58,24 @@ def load_data_splits(batch_size, device = "cuda" if torch.cuda.is_available() el
 
     # Create DataLoaders for each dataset split
     if device == 'cuda':
-        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, pin_memory=True)
-        val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, pin_memory=True)
-        test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, pin_memory=True)
+        train_loader = DataLoader(
+            dataset=train_dataset,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=5,          # Spawns 5 subprocesses for data loading
+            pin_memory=True,        # Allows async data transfer to GPU (when .to(device, non_blocking=True))
+            persistent_workers=True # Keeps workers alive between epochs (newer PyTorch versions)
+        )
+        val_loader = DataLoader(
+            dataset=val_dataset,
+            batch_size=batch_size,
+            shuffle=False
+        )
+        test_loader = DataLoader(
+            dataset=test_dataset,
+            batch_size=batch_size,
+            shuffle=False
+        )
     else:
         train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
         val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
