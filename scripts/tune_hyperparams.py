@@ -19,11 +19,11 @@ def save_best_params(study, trial):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Optimize hyperparameters using Optuna.")
-    parser.add_argument('--n_trials', type=int, default=50, help="Number of trials to run")
+    parser.add_argument('--n_trials', type=int, default=150, help="Number of trials to run")
     parser.add_argument('--study_name', type=str, default="default", help="Optuna study name")
     parser.add_argument('--optuna_storage_path', type=str, default=os.path.join(".", "experiments", "optuna_studies", "study.db"), help="Storage path for persistent study database")
-    parser.add_argument('--min_resource', type=int, default=30, help="Minimum resource for Hyperband Pruner")
-    parser.add_argument('--max_resource', type=int, default=200, help="Maximum resource for Hyperband Pruner")
+    parser.add_argument('--min_resource', type=int, default=45, help="Minimum resource for Hyperband Pruner")
+    parser.add_argument('--max_resource', type=int, default=250, help="Maximum resource for Hyperband Pruner")
     parser.add_argument('--reduction_factor', type=int, default=2, help="Reduction factor for Hyperband Pruner")
 
     args = parser.parse_args()
@@ -55,13 +55,13 @@ if __name__ == "__main__":
         study_name=args.study_name,
         direction="maximize",
         pruner=pruner,
-        sampler=optuna.samplers.TPESampler(n_startup_trials=10, seed=SEED),
+        sampler=optuna.samplers.TPESampler(n_startup_trials=20, seed=SEED, multivariate=True, group=True),
         storage=storage_path,
         load_if_exists=True  # Resume study if it exists
     )
 
     # Run optimization
-    study.optimize(objective, n_trials=args.n_trials, callbacks=[save_best_params], timeout=1200)
+    study.optimize(objective, n_trials=args.n_trials, callbacks=[save_best_params])
 
     # Define the save path for the best study results
     best_params_path = os.path.join(".", "experiments", "trial_best.yaml")
