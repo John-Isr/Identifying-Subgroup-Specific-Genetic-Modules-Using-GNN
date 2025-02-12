@@ -23,23 +23,15 @@ def parse_arguments():
     parser.add_argument("--config",
                         type=str,
                         default=os.path.join("experiments", "default_config.yaml"),
-                        help="Path to the YAML config file (structured).")
+                        help="Path to the hyper parameters YAML config file.")
     parser.add_argument("--data_dir",
                         type=str,
-                        default=os.path.join("data", "modified_graphs"),
+                        default=os.path.join(os.getcwd(),"data", "modified_graphs"),
                         help="Directory containing processed graph data.")
     parser.add_argument("--epochs",
                         type=int,
-                        default=50,
+                        default=250,
                         help="Number of training epochs (not in the config).")
-    parser.add_argument("--batch_size",
-                        type=int,
-                        default=None,
-                        help="Batch size (override flattened config if specified).")
-    parser.add_argument("--device",
-                        type=str,
-                        default="cuda" if torch.cuda.is_available() else "cpu",
-                        help="Device to use for training (cpu or cuda).")
 
     return parser.parse_args()
 
@@ -50,35 +42,34 @@ def main():
     config = load_config(args.config)  # Nested YAML
     hparams = compile_hyperparams_from_config(config)  # Flatten
 
-    ## Override from CLI
-    if args.batch_size is not None:
-        hparams["batch_size"] = args.batch_size
+    ## Get params from CLI
     data_dir = args.data_dir
-    device = args.device
     num_epochs = args.epochs
+
+    batch_size = hparams["batch_size"]
+    node_embedding_type = hparams["node_embedding_type"]
+    device = "cuda" if torch.cuda.is_available() else "cpu"
 
     print(f"Using device: {device}")
     print(f"Training for {num_epochs} epochs")
     print(f"Hparams: {hparams}")
+    print(f"Data directory: {data_dir}")
 
     ## Initialize W&B
     init_wandb(hparams)
 
     ## Load Data
 
-    train_loader, val_loader, test_loader = load_data_splits(
-        batch_size=hparams["batch_size"],device=device,
-        node_embedding_type=hparams["node_embedding_type"],
-        graph_dir=data_dir
-    )
+    train_loader, val_loader,test_loader = load_data_splits(batch_size,node_embedding_type=node_embedding_type,graph_dir=data_dir)
 
     ## Build the Model
     # Get a sample batch to determine input_dim & edge_dim
-    first_batch = next(iter(train_loader))
-    graphs = first_batch.to_data_list()
-    sample_graph = graphs[0]
-    input_dim = sample_graph.x.size(1)
-    edge_dim = sample_graph.edge_attr.size(1)
+    batch = next(iter(val_loader))
+    graphs = batch.to_data_list()  # Use PyG's built-in function
+    # Access a specific graph from the batch
+    graph = graphs[0]
+    input_dim = graph.x.size(1)  # Number of node feature dimensions
+    edge_dim = graph.edge_attr.size(1)  # Number of edge feature dimensions
 
     model = GNNClassifier(
         input_dim=input_dim,
@@ -120,21 +111,13 @@ def main():
     if scheduler_name != "none":
         scheduler_class = getattr(torch.optim.lr_scheduler, scheduler_name)
 
-        # We pass the relevant hparams. For example:
-        #   if scheduler_name == "CosineAnnealingLR", we expect "T_max" and "eta_min"
-        #   if "CyclicLR", we expect base_lr, max_lr, step_size_up, mode, etc.
         scheduler_args = {}
-        # We'll just copy from hparams if it exists
-        # e.g. "T_max" in hparams means scheduler_args["T_max"] = hparams["T_max"]
-        # but let's do it conditionally:
         for key in ("T_max", "eta_min", "factor", "patience", "step_size",
                     "gamma", "base_lr", "max_lr", "step_size_up", "mode"):
             if key in hparams:
                 scheduler_args[key] = hparams[key]
 
-        # For ReduceLROnPlateau specifically, we included "mode": "max" in hparams
         scheduler = scheduler_class(optimizer, **scheduler_args)
-
     ## Train the Model
 
     try:
