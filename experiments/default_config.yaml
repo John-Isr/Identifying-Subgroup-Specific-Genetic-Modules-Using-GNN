@@ -1,0 +1,16 @@
+training:
+  batch_size: 1
+  lr: 0.0023038841199908657
+  model_params:
+    dropout: 0.26515538298292474
+    heads: 8
+    hidden_dim: 64
+    num_layers: 3
+  node_embedding: unweighted
+  optimizer: AdamW
+  optimizer_params: {}
+  pos_weight_ratio: 18
+  scheduler: ExponentialLR
+  scheduler_params:
+    gamma: 0.9304509051670251
+  weight_decay: 0.00034687280928309363
