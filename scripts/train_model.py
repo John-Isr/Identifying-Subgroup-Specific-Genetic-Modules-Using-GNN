@@ -1,12 +1,10 @@
-# todo: implement the main training logic here
 #!/usr/bin/env python3
 from utils import load_data_splits, compile_hyperparams_from_config
-from utils.logging import log_test_metrics, finish_logging, init_wandb
-from models.architecture import GNNClassifier
-from models.training import train_model, evaluate_model
+from utils import log_test_metrics, finish_logging, init_wandb
+from models import GNNClassifier
+from models import train_model, evaluate_model
 
 import os
-import gc
 import yaml
 import argparse
 import torch
@@ -30,7 +28,7 @@ def parse_arguments():
                         help="Directory containing processed graph data.")
     parser.add_argument("--epochs",
                         type=int,
-                        default=250,
+                        default=175,
                         help="Number of training epochs (not in the config).")
 
     return parser.parse_args()

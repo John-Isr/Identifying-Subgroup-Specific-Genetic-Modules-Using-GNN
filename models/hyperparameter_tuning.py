@@ -4,9 +4,9 @@ from torch import nn
 import optuna
 
 from utils import load_data_splits, init_wandb, compile_hyperparams_from_trial
-from models.architecture import GNNClassifier
-from models.training import train_model, evaluate_model
-from utils.logging import log_test_metrics, finish_logging
+from models import GNNClassifier
+from models import train_model, evaluate_model
+from utils import log_test_metrics, finish_logging
 
 
 def objective(trial):
@@ -135,7 +135,7 @@ def objective(trial):
             loss_function=loss_function,
             train_loader=train_loader,
             val_loader=val_loader,
-            num_epochs=250,  # Fixed
+            num_epochs=175,  # Fixed
             trial=trial
         )
     except optuna.exceptions.TrialPruned as e:

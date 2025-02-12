@@ -4,7 +4,7 @@ import argparse
 import yaml
 
 from utils import convert_optuna_params_to_config
-from models.hyperparameter_tuning import objective
+from models import objective
 # Set a fixed seed for reproducibility
 SEED = 42
 
@@ -23,7 +23,7 @@ if __name__ == "__main__":
     parser.add_argument('--study_name', type=str, default="default", help="Optuna study name")
     parser.add_argument('--optuna_storage_path', type=str, default=os.path.join(".", "experiments", "optuna_studies", "study.db"), help="Storage path for persistent study database")
     parser.add_argument('--min_resource', type=int, default=45, help="Minimum resource for Hyperband Pruner")
-    parser.add_argument('--max_resource', type=int, default=250, help="Maximum resource for Hyperband Pruner")
+    parser.add_argument('--max_resource', type=int, default=175, help="Maximum resource for Hyperband Pruner")
     parser.add_argument('--reduction_factor', type=int, default=2, help="Reduction factor for Hyperband Pruner")
 
     args = parser.parse_args()
