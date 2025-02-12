@@ -166,7 +166,7 @@ def compile_hyperparams_from_config(config: dict) -> dict:
     model_params = training_cfg.get("model_params", {})
     num_layers = model_params.get("num_layers", 2)
     hidden_dim = model_params.get("hidden_dim", 128)
-    heads = 2 ** model_params.get("heads", 2)
+    heads = model_params.get("heads", 2)
     dropout = model_params.get("dropout", 0.2)
 
     # Optimizer and scheduler
