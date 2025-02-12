@@ -40,7 +40,7 @@ def run_inference(nx_graph, model_path=os.path.join(".", "experiments", "trained
 
     # Add predictions to NetworkX graph
     nx.set_node_attributes(nx_graph,
-                           {i: float(probs[i]) for i in range(len(probs))},
+                           {i: 1 if probs[i] > 0.5 else 0 for i in range(len(probs))},
                            'classification')
 
     return nx_graph
