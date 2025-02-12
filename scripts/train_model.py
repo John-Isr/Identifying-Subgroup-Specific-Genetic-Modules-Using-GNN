@@ -118,29 +118,18 @@ def main():
                 scheduler_args[key] = hparams[key]
 
         scheduler = scheduler_class(optimizer, **scheduler_args)
-    ## Train the Model
 
-    try:
-        trained_model = train_model(
-            model=model,
-            optimizer=optimizer,
-            scheduler=scheduler,
-            loss_function=loss_function,
-            train_loader=train_loader,
-            val_loader=val_loader,
-            num_epochs=num_epochs,
-            trial=None  # Not using Optuna trial here
-        )
-    except RuntimeError as e:
-        # Graceful handling of OOM or other issues
-        if "out of memory" in str(e).lower():
-            if device == "cuda":
-                torch.cuda.empty_cache()
-            gc.collect()
-            print("Encountered CUDA OOM. Training aborted.")
-            return
-        else:
-            raise e
+    ## Train the Model
+    trained_model = train_model(
+        model=model,
+        optimizer=optimizer,
+        scheduler=scheduler,
+        loss_function=loss_function,
+        train_loader=train_loader,
+        val_loader=val_loader,
+        num_epochs=num_epochs,
+        trial=None  # Not using Optuna trial here
+    )
 
     ## Evaluate on Test Set
     test_metrics = evaluate_model(trained_model, test_loader)
@@ -153,11 +142,11 @@ def main():
           f"  Precision:  {precision:.4f}\n"
           f"  Recall:     {recall:.4f}")
 
-    ## Optional W&B logging:
+    # Log results
     log_test_metrics(f1_score, precision, recall)
     finish_logging()
 
-    ## Save the Trained Model (optional)
+    ## Save the Trained Model
     model_save_path = os.path.join(".", "experiments", "trained_model.pt")
     torch.save(trained_model.state_dict(), model_save_path)
     print(f"Model weights saved to: {model_save_path}")

@@ -1,9 +1,9 @@
 import torch
 import networkx as nx
 from torch_geometric.utils import from_networkx
+import os
 
-
-def run_inference(nx_graph, model_path, device='auto'):
+def run_inference(nx_graph, model_path=os.path.join(".", "experiments", "trained_model.pt"), device='auto'):
     """
     Processes NetworkX graph through trained GNN
     Returns NetworkX graph with node classification feature
