@@ -5,7 +5,7 @@ training:
     dropout: 0.26515538298292474
     heads: 8
     hidden_dim: 64
-    num_layers: 3
+    num_layers: 2
   node_embedding: unweighted
   optimizer: AdamW
   optimizer_params: {}

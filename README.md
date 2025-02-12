@@ -2,17 +2,25 @@
 
 ## 📌 Project Overview
 
-#TODO: Update this section with an extensive overview of the process and results.
-
 This project leverages Graph Neural Networks (GNNs) to **identify subgroup-specific clusters** within gene-gene correlation networks using a supervised learning approach. Each graph in the dataset contains exactly **one subgroup-specific cluster**, and our objective is to classify nodes as either **belonging (1)** or **not belonging (0)** to this cluster.
 
-Key components include:
+For more detailed theoretical background, motivation and results, please refer to the [`Final Project Report`](Final Project Report).
+### Key Features
 
-- **Graph Simulation & Preprocessing:** Generate raw graphs and initialize edge features.
-- **GNN Architecture:** A custom classifier built with GNN layers (e.g., GATv2Conv) that incorporates edge attributes, attention mechanisms, and normalization (GraphNorm) to effectively learn node representations.
-- **Training & Hyperparameter Tuning:** Training routines and hyperparameter optimization using Optuna with W&B logging.
-- **Inference Pipeline:** A clean interface to convert NetworkX graphs to annotated graphs with node predictions.
-- **Experiment Tracking:** Real-time logging and visualization with Weights & Biases (wandb).
+- **Graph Simulation & Preprocessing:**  
+  Generate synthetic correlation networks under multiple conditions, then initialize and store edge features for downstream processing.
+
+- **GNN Architecture:**  
+  A custom neural network built with GATv2Conv layers (or similar) that integrates edge attributes, employs attention mechanisms, and uses GraphNorm for stable training, followed by an MLP for per-node classification.
+
+- **Training & Hyperparameter Tuning:**  
+  Comprehensive training routines for the model, alongside automated hyperparameter search via Optuna. All experiments track metrics and logs in real-time using Weights & Biases (wandb).
+
+- **Inference Pipeline:**  
+  A convenient workflow that converts raw NetworkX graphs into annotated graphs with node-level predictions. This allows easy integration of the trained model into existing or newly generated datasets.
+
+- **Experiment Tracking:**  
+  Rapid iteration and visualization through Weights & Biases (wandb), enabling insights into model performance, architecture decisions, and hyperparameter choices.
 
 ---
 
@@ -62,6 +70,7 @@ Identifying-Subgroup-Specific-Genetic-Modules-Using-GNN
 │   └── preprocessing.py           # Preprocessing utilities
 ├── .gitignore                     # Git ignore file
 ├── LICENSE                        # License information
+├── Final Project Report.pdf       # Final Project Report, detailing the project's theoretical background and results
 ├── README.md                      # Project documentation
 └── requirements.txt               # Python dependencies
 
@@ -106,20 +115,20 @@ Generate raw graphs and initialize their edge features:
 **Note:**
 If you want to customize the graphs you're generating, you can use the following commands:
 ```bash
-python data_pipeline/graph_generator.py --conditions Optimal Suboptimal Default --output_dir data/graphs --num_graphs 1000
-python data_pipeline/init_edge_features.py --input_dir data/graphs --output_dir data/modified_graphs
+python -m data_pipeline.graph_generator --conditions Optimal Suboptimal Default --output_dir data/graphs --num_graphs 1000
+python -m data_pipeline.init_edge_features --input_dir data/graphs --output_dir data/modified_graphs
 ```
 
 ### 2. Train the Model
 Train your GNN model using the training script and configuration file:
 ```bash
-python scripts/train_model.py --config experiments/default_config.yaml --data_dir data/modified_graphs --epochs 250
+python -m scripts.train_model --config experiments/default_config.yaml --data_dir data/modified_graphs --epochs 250
 ```
 
 ### 3. Hyperparameter Tuning
 Optimize the model’s hyperparameters with Optuna:
 ```bash
-python scripts/tune_hyperparams.py --n_trials 150 --study_name default --optuna_storage_path ./experiments/optuna_studies/study.db --min_resource 45 --max_resource 250 --reduction_factor 2
+python -m scripts.tune_hyperparams --n_trials 150 --study_name default --optuna_storage_path ./experiments/optuna_studies/study.db --min_resource 45 --max_resource 250 --reduction_factor 2
 ```
 
 ### 4. Run Inference
@@ -146,7 +155,6 @@ result_graph = run_inference(
 predictions = nx.get_node_attributes(result_graph, 'classification')
 print(predictions)
 ```
-
 ---
 
 ## 📊 Results & Visualization
@@ -165,11 +173,11 @@ Logging in to wandb is required to the training and hyperparameter tuning script
   - Introduced a **formal recursive framework** for learning on graphs.  
 - **Duvenaud et al. (2015)**, *Convolutional Networks on Graphs for Learning Molecular Fingerprints.*  
   - One of the first **graph convolutional approaches**, applied to molecular data.  
-- **Vaswani et al. (2017)**, *Attention Is All You Need.* [[arXiv](https://arxiv.org/abs/1706.03762)]  
+- **Vaswani et al. (2017)**, *Attention Is All You Need.*   
   - Introduced **Transformers**, which inspired attention-based mechanisms in GNNs like GAT and GATv2.
-- **Velicković et al. (2018)**, *Graph Attention Networks.* [[arXiv](https://arxiv.org/abs/1710.10903)]  
+- **Velicković et al. (2018)**, *Graph Attention Networks.*   
   - Proposed the original **Graph Attention Network (GAT)**, using attention mechanisms for adaptive neighborhood aggregation.
-- **Brody, Alon & Yahav (2022)**, *How Attentive are Graph Attention Networks?* [[arXiv](https://arxiv.org/abs/2105.14491)]  
+- **Brody, Alon & Yahav (2022)**, *How Attentive are Graph Attention Networks?*  
   - Introduced **GATv2**, an improved version of GAT with dynamic attention mechanisms.
 - **Wu et al. (2019)**, *A Comprehensive Survey on Graph Neural Networks.*  
   - Summarizes the evolution of **GNN architectures**, including GCN, GraphSAGE, and GAT.  
