@@ -4,7 +4,7 @@
 
 This project leverages Graph Neural Networks (GNNs) to **identify subgroup-specific clusters** within gene-gene correlation networks using a supervised learning approach. Each graph in the dataset contains exactly **one subgroup-specific cluster**, and our objective is to classify nodes as either **belonging (1)** or **not belonging (0)** to this cluster.
 
-For more detailed theoretical background, motivation and results, please refer to the [`Final Project Report`](Final Project Report).
+For more detailed theoretical background, motivation and results, please refer to the [`Project Report`](Final%20Project%20Report.pdf).
 ### Key Features
 
 - **Graph Simulation & Preprocessing:**  
