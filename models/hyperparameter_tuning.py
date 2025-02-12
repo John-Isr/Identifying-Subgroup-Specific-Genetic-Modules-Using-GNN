@@ -77,15 +77,11 @@ def objective(trial):
     init_wandb(config)
     ## Initialize all the training and model components
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    #TODO: Evaluate if these synch points help with training hangs
 
-    # if device == 'cuda':
-    #     torch.cuda.synchronize()  # Wait for all CUDA operations to finish
-    #     torch.cuda.empty_cache()  # Free unused memory
     gc.collect()  # Collect garbage from previous trials
 
     # Get DataLoaders
-    train_loader, val_loader,test_loader = load_data_splits(batch_size, node_embedding_type)
+    train_loader, val_loader,test_loader = load_data_splits(batch_size,node_embedding_type=node_embedding_type)
     # Loss Function
     pos_weight = torch.tensor([pos_weight_ratio], dtype=torch.float32).to(device)
     loss_function = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
@@ -163,11 +159,11 @@ def objective(trial):
 
 
     # Evaluate on test set before gracefully exiting
-    val_metrics = evaluate_model(model, test_loader)
-    log_test_metrics(val_metrics['f1_score'], val_metrics['precision'], val_metrics['recall'], trial)
+    test_metrics = evaluate_model(model, test_loader)
+    log_test_metrics(test_metrics['f1_score'], test_metrics['precision'], test_metrics['recall'], trial)
     finish_logging()
     clean_up_trial(model, device)
-    return val_metrics['f1_score']
+    return test_metrics['f1_score']
 
 def clean_up_trial(model, device):
     # Clean up trial resources

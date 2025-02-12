@@ -1,5 +1,3 @@
-#TODO: implement inference logic here, using the trained model
-#TODO: go over this GPT code to understand how it works
 import torch
 import networkx as nx
 from torch_geometric.utils import from_networkx
@@ -25,7 +23,7 @@ def run_inference(nx_graph, model_path, device='auto'):
     # Convert to PyG format
     pyg_data = from_networkx(nx_graph)
 
-    # Add dummy edge features if needed (model expects them)
+    # Make sure graph has edge features
     if not hasattr(pyg_data, 'edge_attr'):
             raise ValueError("Input graph does not have edge features.")
 
@@ -39,8 +37,6 @@ def run_inference(nx_graph, model_path, device='auto'):
                        pyg_data.edge_index.to(device),
                        pyg_data.edge_attr.float().to(device))
         probs = torch.sigmoid(logits).cpu().numpy()
-
-    #TODO: Consider returning the actual classification instead of the probability
 
     # Add predictions to NetworkX graph
     nx.set_node_attributes(nx_graph,

@@ -6,7 +6,7 @@ from torch_geometric.loader import DataLoader
 from torch.utils.data import random_split
 
 
-def load_data_splits(batch_size, device = "cuda" if torch.cuda.is_available() else "cpu", node_embedding_type='weighted', seed=42, graph_dir = "./data/modified_graphs"):
+def load_data_splits(batch_size=1, node_embedding_type='weighted', graph_dir = "./data/modified_graphs",seed=42):
     """
     Loads graphs from the modified graphs directory, applies the specified node embedding,
     splits the dataset into train/validation/test, and returns corresponding DataLoaders.
@@ -57,29 +57,9 @@ def load_data_splits(batch_size, device = "cuda" if torch.cuda.is_available() el
     )
 
     # Create DataLoaders for each dataset split
-    if device == 'cuda':
-        train_loader = DataLoader(
-            dataset=train_dataset,
-            batch_size=batch_size,
-            shuffle=True,
-            num_workers=5,          # Spawns 5 subprocesses for data loading
-            pin_memory=True,        # Allows async data transfer to GPU (when .to(device, non_blocking=True))
-            persistent_workers=True # Keeps workers alive between epochs (newer PyTorch versions)
-        )
-        val_loader = DataLoader(
-            dataset=val_dataset,
-            batch_size=batch_size,
-            shuffle=False
-        )
-        test_loader = DataLoader(
-            dataset=test_dataset,
-            batch_size=batch_size,
-            shuffle=False
-        )
-    else:
-        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-        val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
-        test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
     return train_loader, val_loader, test_loader
 
