@@ -135,7 +135,7 @@ def objective(trial):
             loss_function=loss_function,
             train_loader=train_loader,
             val_loader=val_loader,
-            num_epochs=175,  # Fixed
+            num_epochs=250,  # Fixed
             trial=trial
         )
     except optuna.exceptions.TrialPruned as e:

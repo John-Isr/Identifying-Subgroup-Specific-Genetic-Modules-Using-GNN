@@ -28,7 +28,7 @@ def parse_arguments():
                         help="Directory containing processed graph data.")
     parser.add_argument("--epochs",
                         type=int,
-                        default=175,
+                        default=250,
                         help="Number of training epochs (not in the config).")
 
     return parser.parse_args()
@@ -146,7 +146,7 @@ def main():
 
     ## Save the Trained Model
     model_save_path = os.path.join(".", "experiments", "trained_model.pt")
-    torch.save(trained_model.state_dict(), model_save_path)
+    torch.save(trained_model, model_save_path)
     print(f"Model weights saved to: {model_save_path}")
 
     print("Training complete!")
